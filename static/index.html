@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karate Championship 2024</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/1.9.10/htmx.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            font-size: 2.5em;
+        }
+        
+        .scoreboard {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .player-section {
+            flex: 1;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .red-section {
+            background-color: #ffebee;
+            border: 3px solid #ff1744;
+        }
+        
+        .blue-section {
+            background-color: #e3f2fd;
+            border: 3px solid #2962ff;
+        }
+        
+        .score {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .red-section .score {
+            color: #ff1744;
+        }
+        
+        .blue-section .score {
+            color: #2962ff;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.1s;
+        }
+        
+        button:active {
+            transform: scale(0.95);
+        }
+        
+        .red-section button {
+            background-color: #ff1744;
+            color: white;
+        }
+        
+        .blue-section button {
+            background-color: #2962ff;
+            color: white;
+        }
+        
+        .winner-banner {
+            text-align: center;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        
+        .red-winner {
+            background-color: #ff1744;
+            color: white;
+        }
+        
+        .blue-winner {
+            background-color: #2962ff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥋 Karate Championship 2024 🥋</h1>
+        
+        <div class="scoreboard">
+            <!-- Red Player  -->
+            <div class="player-section red-section">
+                <h2>Red Fighter</h2>
+                <div class="score" id="red-score">0</div>
+                <div class="controls">
+                    <button hx-post="/updateScore"
+                            hx-vals='{"playerColor": "red", "points": 1}'
+                            class="score-btn">+1</button>
+                    <button hx-post="/updateScore"
+                            hx-vals='{"playerColor": "red", "points": 2}'
+                            class="score-btn">+2</button>
+                    <button hx-post="/updateScore"
+                            hx-vals='{"playerColor": "red", "points": 3}'
+                            class="score-btn">+3</button>
+                </div>
+                <div id="red-winner"></div>
+            </div>
+            
+            <!-- Blue Player-->
+            <div class="player-section blue-section">
+                <h2>Blue Fighter</h2>
+                <div class="score" id="blue-score">0</div>
+                <div class="controls">
+                    <button hx-post="/updateScore"
+                            hx-vals='{"playerColor": "blue", "points": 1}'
+                            class="score-btn">+1</button>
+                    <button hx-post="/updateScore"
+                            hx-vals='{"playerColor": "blue", "points": 2}'
+                            class="score-btn">+2</button>
+                    <button hx-post="/updateScore"
+                            hx-vals='{"playerColor": "blue", "points": 3}'
+                            class="score-btn">+3</button>
+                </div>
+                <div id="blue-winner"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set up SSE connection
+        const eventSource = new EventSource('/streamScore');
+        
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            
+            // Update scores
+            document.getElementById('red-score').textContent = data.red;
+            document.getElementById('blue-score').textContent = data.blue;
+            
+            // Check for winner
+            if (data.winner) {
+                const winnerBanner = document.createElement('div');
+                winnerBanner.className = `winner-banner ${data.winner}-winner`;
+                winnerBanner.textContent = `${data.winner.toUpperCase()} FIGHTER WINS! 🏆`;
+                document.querySelectorAll('.winner-banner').forEach(el => el.remove());
+                document.querySelector('.scoreboard').insertAdjacentElement('afterend', winnerBanner);
+                eventSource.close();
+                document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            }
+        };
+    </script>
+</body>
+</html>
