@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -36,6 +37,10 @@ var (
 var matches = make(map[string]*Match)
 
 func main() {
+
+	//run htmx.html file with main.go file
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/", fs)
 
 	// Update score by sending a POST request to /updateScore
 	http.HandleFunc("/updateScore", func(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +96,9 @@ func main() {
 	// Stream score by sending a GET request to /streamScore
 	http.HandleFunc("/streamScore", streamScoreHandler)
 
-	http.ListenAndServe(":8080", nil)
+	if err := http.ListenAndServe(":9000", nil); err != nil {
+		log.Fatalf("Error starting server: %s", err)
+	}
 
 }
 
